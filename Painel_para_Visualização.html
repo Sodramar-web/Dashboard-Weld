@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Status Atual - 11 Máquinas</title>
+
+  <style>
+    :root{
+      --bg:#061529;
+      --line:rgba(255,255,255,0.10);
+      --txt:#ffffff;
+      --muted:#a8d0ff;
+
+      --green:#3aa868;
+      --green2:rgba(58,168,104,0.18);
+
+      --red:#d64545;
+      --red2:rgba(214,69,69,0.18);
+
+      --orange:#e2a300;
+      --orange2:rgba(226,163,0,0.20);
+
+      --cardGrad: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+      --shadow:0 10px 26px rgba(0,0,0,0.45);
+      --r22:22px;
+    }
+
+    *{ margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', Arial, sans-serif; }
+    body{ background:var(--bg); color:var(--txt); min-height:100vh; overflow-x:hidden; }
+
+    .wrap{
+      max-width:1400px;
+      margin:14px auto 18px;
+      padding:0 12px;
+    }
+
+    /* TOP */
+    .topbar{
+      display:flex;
+      gap:12px;
+      align-items:stretch;
+      justify-content:space-between;
+      flex-wrap:wrap;
+      margin-bottom:12px;
+    }
+
+    .titlebox{
+      flex:1 1 520px;
+      background:var(--cardGrad);
+      border:1px solid var(--line);
+      border-radius:var(--r22);
+      box-shadow:var(--shadow);
+      padding:16px 18px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+    }
+
+    .title-left h1{
+      font-size:18px;
+      letter-spacing:0.8px;
+      margin-bottom:4px;
+      font-weight:1000;
+    }
+    .subtitle{ font-size:12px; color:var(--muted); }
+
+    .title-right{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+
+    .pill{
+      padding:7px 12px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,0.12);
+      background:rgba(0,0,0,0.28);
+      font-size:12px;
+      font-weight:1000;
+      white-space:nowrap;
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+    .pill .dot{
+      width:9px; height:9px; border-radius:50%;
+      background:#9bc3ff;
+      opacity:.9;
+    }
+    .pill.ok{ border-color: rgba(58,168,104,.35); background: rgba(58,168,104,.14); }
+    .pill.ok .dot{ background: var(--green); }
+    .pill.stop{ border-color: rgba(214,69,69,.35); background: rgba(214,69,69,.14); }
+    .pill.stop .dot{ background: var(--red); }
+    .pill.maint{ border-color: rgba(226,163,0,.35); background: rgba(226,163,0,.14); }
+    .pill.maint .dot{ background: var(--orange); }
+
+    .controls{
+      flex:1 1 420px;
+      background:var(--cardGrad);
+      border:1px solid var(--line);
+      border-radius:var(--r22);
+      box-shadow:var(--shadow);
+      padding:12px 14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .btn{
+      padding:9px 14px;
+      border:none;
+      border-radius:12px;
+      font-weight:1000;
+      cursor:pointer;
+      transition:all .2s;
+      background:var(--green);
+      color:#fff;
+      box-shadow:0 10px 18px rgba(0,0,0,0.25);
+      display:flex;
+      align-items:center;
+      gap:8px;
+      font-size:13px;
+    }
+    .btn:hover{ transform:translateY(-1px); filter:brightness(1.02); }
+    .btn:disabled{ opacity:.6; cursor:not-allowed; transform:none; }
+
+    .select{
+      padding:9px 12px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,0.16);
+      background:rgba(0,0,0,0.40);
+      color:#fff;
+      font-size:13px;
+      font-weight:900;
+      outline:none;
+      cursor:pointer;
+      min-width:210px;
+    }
+    .select option{ background:#111a2b; }
+
+    .hint{
+      font-size:11px;
+      color:rgba(255,255,255,0.65);
+      font-weight:800;
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+    .spinner{
+      display:inline-block; width:16px; height:16px;
+      border:2px solid rgba(255,255,255,0.25);
+      border-radius:50%; border-top-color:#fff;
+      animation:spin 1s linear infinite;
+    }
+    @keyframes spin{ to{ transform:rotate(360deg);} }
+
+    /* GRID */
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+      gap:14px;
+      margin-top:12px;
+    }
+
+    .machine-card{
+      background: linear-gradient(180deg, rgba(0,0,0,0.25), rgba(0,0,0,0.10));
+      border-radius: 18px;
+      padding: 14px 14px;
+      border: 2px solid rgba(255,255,255,0.12);
+      box-shadow: 0 14px 26px rgba(0,0,0,0.28);
+      position:relative;
+      overflow:hidden;
+      min-height: 140px;
+    }
+
+    /* faixa lateral */
+    .machine-card::before{
+      content:"";
+      position:absolute; left:0; top:0; bottom:0;
+      width:6px;
+      background: rgba(255,255,255,0.18);
+      opacity:.95;
+    }
+
+    /* cores por status */
+    .machine-card.run{ border-color: rgba(58,168,104,0.85); }
+    .machine-card.run::before{ background: var(--green); }
+
+    .machine-card.stop{ border-color: rgba(214,69,69,0.85); }
+    .machine-card.stop::before{ background: var(--red); }
+
+    .machine-card.maint{ border-color: rgba(226,163,0,0.95); }
+    .machine-card.maint::before{ background: var(--orange); }
+
+    .machine-card.unknown{
+      border-color: rgba(255,255,255,0.18);
+      opacity:0.92;
+    }
+
+    .card-top{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:10px;
+      margin-bottom:8px;
+    }
+
+    .machine-name{
+      font-weight:1000;
+      letter-spacing:0.5px;
+      font-size:13px;
+      color:#cfe3ff;
+      text-transform:uppercase;
+    }
+
+    .time{
+      font-size:11px;
+      color:rgba(255,255,255,0.62);
+      font-weight:900;
+      white-space:nowrap;
+    }
+
+    .status-big{
+      font-size:20px;
+      font-weight:1000;
+      margin-bottom:8px;
+      line-height:1.05;
+    }
+
+    .line2{
+      font-size:12.5px;
+      color:#cfe3ff;
+      line-height:1.35;
+      font-weight:800;
+      word-break:break-word;
+    }
+    .line2 b{ font-weight:1000; color:#ffffff; }
+
+    .smallwarn{
+      margin-top:10px;
+      font-size:11px;
+      color:rgba(255,255,255,0.60);
+      font-weight:900;
+    }
+
+    .footer{
+      margin-top:14px;
+      text-align:center;
+      font-size:11px;
+      color:rgba(255,255,255,0.55);
+      font-weight:800;
+    }
+
+    @media (max-width:520px){
+      .titlebox{ padding:14px 14px; }
+      .title-left h1{ font-size:16px; }
+      .select{ min-width: 100%; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="titlebox">
+        <div class="title-left">
+          <h1>STATUS ATUAL • 11 MÁQUINAS</h1>
+          <div class="subtitle">Monitoramento em tempo real (somente leitura)</div>
+        </div>
+        <div class="title-right">
+          <div class="pill ok"><span class="dot"></span>Funcionamento: <span id="cntRun">0</span></div>
+          <div class="pill stop"><span class="dot"></span>Parada: <span id="cntStop">0</span></div>
+          <div class="pill maint"><span class="dot"></span>Manutenção: <span id="cntMaint">0</span></div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button class="btn" id="btnRefresh">
+          <span id="spin" class="spinner" style="display:none;"></span>
+          🔄 Atualizar
+        </button>
+
+        <select class="select" id="viewFilter">
+          <option value="all">Exibir: Todas</option>
+          <option value="run">Exibir: Em funcionamento</option>
+          <option value="stop">Exibir: Parada</option>
+          <option value="maint">Exibir: Em manutenção</option>
+        </select>
+
+        <div class="hint" id="globalHint">Última atualização: <b id="lastUpdate">--:--</b></div>
+      </div>
+    </div>
+
+    <div class="grid" id="grid"></div>
+
+    <div class="footer">
+      Dica: se estiver em segundo plano, o navegador pode reduzir a frequência de atualização.
+    </div>
+  </div>
+
+  <script>
+    // ==========================
+    // URL do seu Web App (GET)
+    // ==========================
+    const URL_GET = "https://script.google.com/macros/s/AKfycby5aTKl97h_sDmC7WeIK9upKpEdohBwoKVJ1bm5cs0G5Jo71qBwqp77RNqC9X_Xubk/exec";
+
+    // ==========================
+    // Máquinas
+    // ==========================
+    const MAQUINAS = Array.from({length: 11}, (_, i) => `Máquina ${i+1}`);
+
+    // ==========================
+    // Poll / limites
+    // ==========================
+    const WINDOW_READ = 6000;
+    const LIMIT_FULL  = 60;
+    const LIMIT_DELTA = 60;
+    const POLL_FAST_MS = 6000;
+    const POLL_SLOW_MS = 20000;
+
+    const lastTimestampByMachine = {};
+    const currentByMachine = {}; // último registro normalizado por máquina
+    let pollTimer = null;
+
+    // ==========================
+    // Códigos -> descrição
+    // (mesma lista do seu site)
+    // ==========================
+    const CODIGOS_RAW = [
+      {id:1,  desc:"REVEZAMENTO"},
+      {id:2,  desc:"REFEIÇÃO"},
+      {id:3,  desc:"TROCA DE MOLDE"},
+      {id:4,  desc:"REGULAGEM"},
+      {id:5,  desc:"MANUT.ELÉTRICA"},
+      {id:6,  desc:"FERRAMENTARIA"},
+      {id:7,  desc:"ESTUFAGEM"},
+      {id:8,  desc:"AQUECIMENTO MAQ"},
+      {id:9,  desc:"MANUT. MECÂNICA"},
+      {id:10, desc:"MANUT.MEC.PREVEN"},
+      {id:11, desc:"FALTA MP"},
+      {id:12, desc:"LIMPEZA MÁQUINA"},
+      {id:13, desc:"AGUARD.REGULAGEM"},
+      {id:14, desc:"TRY-OUT"},
+      {id:15, desc:"SEM PROGRAMAÇÃO"},
+      {id:16, desc:"FALTA DE ENERGIA"},
+      {id:17, desc:"FALTA DE OPERADOR"},
+      {id:18, desc:"FALTA DE EMBALAGEM"},
+      {id:19, desc:"AGUAR.TROCA MOLDE"},
+      {id:20, desc:"FIM PRODUÇÃO"},
+      {id:21, desc:"REVISÃO REFRIGERA"},
+      {id:22, desc:"LIMPEZA MOLDE"},
+      {id:23, desc:"LIMPEZA CILINDRO"},
+      {id:24, desc:"AGUARDANDO C.Q"},
+      {id:25, desc:"CARREGAR CAMINHÃO"},
+      {id:26, desc:"REUNIÃO"},
+      {id:27, desc:"FALTA COMPONENTE"},
+      {id:28, desc:"HORÁRIO BANHEIRO"},
+      {id:29, desc:"AGUARDA.PPCP"},
+      {id:30, desc:"FALTA OP"},
+      {id:31, desc:"FALTA ETIQUETAS"},
+      {id:32, desc:"FALTA DOCUMENTOS"},
+      {id:33, desc:"MP CONTAMINADO"},
+      {id:34, desc:"TREINAMENTO"},
+      {id:35, desc:"AGUARD. MOAGEM"},
+      {id:36, desc:"OUTROS"},
+      {id:37, desc:"AGUARD.DEF.CLIENTE"},
+      {id:38, desc:"FALTA AQUECEDOR"},
+      {id:39, desc:"ABASTE.MAQ.FERRO"},
+      {id:40, desc:"INICIO PRODUÇÃO"},
+      {id:41, desc:"LIMPEZA SETOR"},
+      {id:42, desc:"BUSCAR MP SODRAM"},
+      {id:43, desc:"PROBLEMA G1"},
+      {id:44, desc:"PROBLEMA G2"},
+      {id:45, desc:"PROB. TORRE RESFR"},
+      {id:46, desc:"PEÇA PRESA MOLDE"},
+      {id:47, desc:"TROCA DE POSTIÇO"},
+      {id:48, desc:"TROCA DE SERRA"},
+      {id:49, desc:"FALTA DE ESPAÇO"},
+      {id:50, desc:"BICO ENTUPIDO"},
+      {id:51, desc:"FORA DE CICLO"},
+      {id:52, desc:"EMBAL / TESTE / COLETOR"},
+      {id:53, desc:"MANCHAS LEITOSA"},
+      {id:54, desc:"SAÍDA SEM RETORNO"},
+      {id:56, desc:"AGUARD. TÉCNICO PROC."}
+    ];
+    const CODIGO_MAP = new Map(CODIGOS_RAW.map(c => [String(c.id), c.desc]));
+
+    // ==========================
+    // Utils
+    // ==========================
+    const grid = document.getElementById('grid');
+    const btnRefresh = document.getElementById('btnRefresh');
+    const spin = document.getElementById('spin');
+    const viewFilter = document.getElementById('viewFilter');
+    const lastUpdateEl = document.getElementById('lastUpdate');
+
+    function escapeHTML(s){
+      return String(s ?? '')
+        .replaceAll('&','&amp;')
+        .replaceAll('<','&lt;')
+        .replaceAll('>','&gt;')
+        .replaceAll('"','&quot;')
+        .replaceAll("'","&#039;");
+    }
+
+    function toDateFromRecord(r){
+      // prefer Timestamp ISO
+      const ts = r?.Timestamp || r?.timestamp || '';
+      if(ts){
+        const d = new Date(ts);
+        if(!isNaN(d.getTime())) return d;
+      }
+      // fallback (data/hora)
+      const data = r?.data;
+      const hora = r?.hora;
+      if(data && hora){
+        const m = String(data).match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+        const h = String(hora).match(/^(\d{2}):(\d{2})(?::(\d{2}))?$/);
+        if(m && h){
+          const dd = parseInt(m[1],10);
+          const mm = parseInt(m[2],10)-1;
+          const yy = parseInt(m[3],10);
+          const HH = parseInt(h[1],10);
+          const MM = parseInt(h[2],10);
+          const SS = parseInt(h[3]||'0',10);
+          const d = new Date(yy, mm, dd, HH, MM, SS);
+          if(!isNaN(d.getTime())) return d;
+        }
+      }
+      return null;
+    }
+
+    function fmtDateTime(d){
+      if(!d) return '--/--/---- --:--:--';
+      const dd = String(d.getDate()).padStart(2,'0');
+      const mm = String(d.getMonth()+1).padStart(2,'0');
+      const yy = d.getFullYear();
+      const HH = String(d.getHours()).padStart(2,'0');
+      const MM = String(d.getMinutes()).padStart(2,'0');
+      const SS = String(d.getSeconds()).padStart(2,'0');
+      return `${dd}/${mm}/${yy} ${HH}:${MM}:${SS}`;
+    }
+
+    function statusToClass(status){
+      const low = String(status||'').toLowerCase();
+      if(low.includes('parada')) return 'stop';
+      if(low.includes('manuten')) return 'maint';
+      if(low.includes('funcion')) return 'run';
+      return 'unknown';
+    }
+
+    function extrairDetalhes(reg){
+      const status = String(reg?.Status || '');
+      const low = status.toLowerCase();
+
+      const opCol = reg?.['Número OP'] || reg?.['Numero OP'] || reg?.numeroOP || reg?.op || '';
+      const codPar = reg?.['Código Parada'] || reg?.['Codigo Parada'] || reg?.codigoParada || '';
+      const codMan = reg?.['Código Manutenção'] || reg?.['Codigo Manutenção'] || reg?.codigoManutencao || '';
+
+      let codNum = '';
+      if(low.includes('parada')) codNum = String(codPar||'').trim();
+      else if(low.includes('manuten')) codNum = String(codMan||'').trim();
+
+      let obs = reg?.['Observação'] || reg?.['Observacao'] || reg?.observacao || '';
+      let op  = String(opCol||'').trim();
+
+      const obsStr = String(obs || '').trim();
+
+      const codDesc = codNum ? (CODIGO_MAP.get(String(codNum)) || '') : '';
+      return { codigo: codNum, codigoDesc: codDesc, op, obs: obsStr || 'Sem observação' };
+    }
+
+    function pickLatest(registros){
+      const norm = (registros || []).map(r=>{
+        const d = toDateFromRecord(r);
+        return { raw:r, d };
+      }).filter(x=>x.d);
+
+      if(!norm.length) return null;
+      norm.sort((a,b)=> b.d.getTime() - a.d.getTime());
+      return { reg: norm[0].raw, date: norm[0].d };
+    }
+
+    function buildCard(machine, payload){
+      const existing = document.getElementById(`card-${machine}`);
+      const wrap = existing || document.createElement('div');
+
+      wrap.id = `card-${machine}`;
+      wrap.dataset.machine = machine;
+
+      if(!payload || payload.error){
+        wrap.className = `machine-card unknown`;
+        wrap.innerHTML = `
+          <div class="card-top">
+            <div class="machine-name">${escapeHTML(machine)}</div>
+            <div class="time">--/--/---- --:--:--</div>
+          </div>
+          <div class="status-big">Sem dados</div>
+          <div class="line2"><b>—</b> | ${escapeHTML(payload?.error || 'Aguardando leitura...')}</div>
+          <div class="smallwarn">Verifique se o Apps Script está publicado e acessível.</div>
+        `;
+        if(!existing) grid.appendChild(wrap);
+        return;
+      }
+
+      const status = String(payload.status || '-');
+      const cls = statusToClass(status);
+      const when = fmtDateTime(payload.date);
+
+      const det = extrairDetalhes(payload.reg);
+
+      let left = '';
+      if(cls === 'run'){
+        left = det.op ? `<b>OP: ${escapeHTML(det.op)}</b>` : `<b>OP: -</b>`;
+      }else if(cls === 'stop' || cls === 'maint'){
+        if(det.codigo){
+          left = `<b>Cód: ${escapeHTML(det.codigo)}${det.codigoDesc ? ` - ${escapeHTML(det.codigoDesc)}` : ''}</b>`;
+        }else{
+          left = `<b>Cód: -</b>`;
+        }
+      }else{
+        left = `<b>—</b>`;
+      }
+
+      wrap.className = `machine-card ${cls}`;
+      wrap.innerHTML = `
+        <div class="card-top">
+          <div class="machine-name">${escapeHTML(machine)}</div>
+          <div class="time">${escapeHTML(when)}</div>
+        </div>
+        <div class="status-big">${escapeHTML(status)}</div>
+        <div class="line2">${left} | ${escapeHTML(det.obs || 'Sem observação')}</div>
+      `;
+
+      if(!existing) grid.appendChild(wrap);
+    }
+
+    function applyViewFilter(){
+      const f = viewFilter.value;
+      const cards = grid.querySelectorAll('.machine-card');
+      cards.forEach(c=>{
+        if(f === 'all') { c.style.display = ''; return; }
+        c.style.display = c.classList.contains(f) ? '' : 'none';
+      });
+    }
+
+    function updateCounters(){
+      let run=0, stop=0, maint=0;
+      for(const m of MAQUINAS){
+        const st = currentByMachine[m]?.status || '';
+        const cls = statusToClass(st);
+        if(cls==='run') run++;
+        if(cls==='stop') stop++;
+        if(cls==='maint') maint++;
+      }
+      document.getElementById('cntRun').textContent = run;
+      document.getElementById('cntStop').textContent = stop;
+      document.getElementById('cntMaint').textContent = maint;
+    }
+
+    // ==========================
+    // Fetch por máquina
+    // ==========================
+    async function updateMachine(machine, force=false){
+      const params = new URLSearchParams();
+      params.set('maquina', machine);
+      params.set('window', WINDOW_READ);
+
+      const lastTs = lastTimestampByMachine[machine];
+      if(!force && lastTs){
+        params.set('after', lastTs);
+        params.set('limit', LIMIT_DELTA);
+      }else{
+        params.set('limit', LIMIT_FULL);
+      }
+
+      params.set('_', Date.now());
+
+      const url = `${URL_GET}?${params.toString()}`;
+
+      const resp = await fetch(url, { method:'GET', cache:'no-store' });
+      if(!resp.ok) throw new Error(`HTTP ${resp.status}`);
+
+      const json = await resp.json();
+      if(!json.success) throw new Error(json.error || 'Resposta inválida');
+
+      const registros = Array.isArray(json.registros) ? json.registros : [];
+      const meta = json.meta || {};
+
+      if(meta.lastTimestamp) lastTimestampByMachine[machine] = meta.lastTimestamp;
+
+      // se veio algo novo, pega o mais recente; senão mantém o atual
+      if(registros.length){
+        const latest = pickLatest(registros);
+        if(latest){
+          currentByMachine[machine] = {
+            reg: latest.reg,
+            date: latest.date,
+            status: latest.reg?.Status || '-'
+          };
+        }
+      }else{
+        // se ainda não existe cache, tenta forçar uma leitura cheia na primeira vez
+        if(!currentByMachine[machine] && !force){
+          return updateMachine(machine, true);
+        }
+      }
+
+      // monta card com cache (se existir)
+      if(currentByMachine[machine]){
+        buildCard(machine, {
+          reg: currentByMachine[machine].reg,
+          date: currentByMachine[machine].date,
+          status: currentByMachine[machine].status
+        });
+      }else{
+        buildCard(machine, { error: 'Sem registros para essa máquina.' });
+      }
+    }
+
+    async function updateAll(force=false){
+      btnRefresh.disabled = true;
+      spin.style.display = 'inline-block';
+
+      // placeholder rápido (primeira carga)
+      if(!grid.children.length){
+        MAQUINAS.forEach(m => buildCard(m, { error: 'Carregando...' }));
+      }
+
+      const tasks = MAQUINAS.map(async m=>{
+        try{
+          await updateMachine(m, force);
+        }catch(err){
+          console.error(m, err);
+          buildCard(m, { error: `Erro ao ler: ${err.message}` });
+        }
+      });
+
+      await Promise.allSettled(tasks);
+
+      updateCounters();
+      applyViewFilter();
+
+      const now = new Date();
+      lastUpdateEl.textContent = now.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
+
+      btnRefresh.disabled = false;
+      spin.style.display = 'none';
+    }
+
+    // ==========================
+    // Poll inteligente
+    // ==========================
+    function startPoll(){
+      stopPoll();
+      const loop = async ()=>{
+        const active = !document.hidden;
+        const delay = active ? POLL_FAST_MS : POLL_SLOW_MS;
+
+        await updateAll(false);
+        pollTimer = setTimeout(loop, delay);
+      };
+      pollTimer = setTimeout(loop, 500);
+    }
+
+    function stopPoll(){
+      if(pollTimer) clearTimeout(pollTimer);
+      pollTimer = null;
+    }
+
+    // ==========================
+    // Eventos
+    // ==========================
+    btnRefresh.addEventListener('click', ()=> updateAll(true));
+    viewFilter.addEventListener('change', applyViewFilter);
+
+    document.addEventListener('visibilitychange', ()=>{
+      if(!document.hidden){
+        updateAll(false);
+      }
+    });
+
+    // init
+    document.addEventListener('DOMContentLoaded', ()=>{
+      updateAll(true);
+      startPoll();
+    });
+  </script>
+</body>
+</html>
